@@ -1,0 +1,81 @@
+---
+kind: pipeline
+type: kubernetes
+name: Image Staging
+
+platform:
+    os: linux
+    arch: arm
+
+trigger:
+  event:
+  - push
+  - tag
+
+steps:
+  - name: build
+    image: docker-registry.pikube.dev:31443/drone-genuinetools-img:latest
+    settings:
+      registry: docker-registry-service.docker-registry:5000
+      repo: drone-genuinetools-img
+      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
+      tags: ${DRONE_BRANCH},unstable
+      cache: true
+      insecure_registry: true
+    resources:
+      limits:
+        cpu: 1000
+        memory: 500MiB
+
+  - name: test
+    pull: always
+    image: docker-registry.pikube.dev:31443/drone-genuinetools-img:unstable
+    settings:
+      registry: docker-registry-service.docker-registry:5000
+      repo: drone-genuinetools-img
+      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
+      tags: ${DRONE_BRANCH},unstable
+      cache: false
+      insecure_registry: true
+    resources:
+      limits:
+        cpu: 1000
+        memory: 500MiB
+
+---
+kind: pipeline
+type: kubernetes
+name: Image Production
+
+platform:
+    os: linux
+    arch: arm
+
+trigger:
+  event:
+  - tag
+
+depends_on:
+  - Image Staging
+
+steps:
+  - name: build
+    image: docker-registry.pikube.dev:31443/drone-genuinetools-img:unstable
+    pull: always
+    settings:
+      registry: docker-registry-service.docker-registry:5000
+      repo: drone-genuinetools-img
+      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=${DRONE_TAG}
+      auto_tag: true
+      cache: true
+      insecure_registry: true
+    resources:
+      limits:
+        cpu: 1000
+        memory: 500MiB
+
+---
+kind: signature
+hmac: 1b2f6f5baa7aac9ca66de3c27eaf52c2d1154dc418539a2a485378202c55f7b9
+
+...
