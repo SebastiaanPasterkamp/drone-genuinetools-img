@@ -13,11 +13,19 @@ trigger:
   - tag
 
 steps:
+  - name: prepare
+    image: drone/git
+    commands:
+      - cp plugin.sh img
+      - cd img
+      - git apply --whitespace=fix --3way ../patches/*
+
   - name: build
     image: docker-registry.pikube.dev:31443/drone-genuinetools-img:latest
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
+      context: img
       build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
       tags: ${DRONE_BRANCH},unstable
       cache: true
@@ -33,6 +41,7 @@ steps:
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
+      context: img
       build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
       tags: ${DRONE_BRANCH},unstable
       cache: false
@@ -59,12 +68,20 @@ depends_on:
   - Image Staging
 
 steps:
+  - name: prepare
+    image: drone/git
+    commands:
+      - cp plugin.sh img
+      - cd img
+      - git apply --whitespace=fix --3way ../patches/*
+
   - name: build
     image: docker-registry.pikube.dev:31443/drone-genuinetools-img:unstable
     pull: always
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
+      context: img
       build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=${DRONE_TAG}
       auto_tag: true
       cache: true
@@ -76,6 +93,6 @@ steps:
 
 ---
 kind: signature
-hmac: 1b2f6f5baa7aac9ca66de3c27eaf52c2d1154dc418539a2a485378202c55f7b9
+hmac: 56236f0f0fe72f694354585e20fc9f93bb81b87c04fa4c8927da027989325eec
 
 ...

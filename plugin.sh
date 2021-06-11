@@ -28,7 +28,7 @@ if [ "${PLUGIN_JSON_KEY:-}" ];then
 fi
 
 DOCKERFILE=${PLUGIN_DOCKERFILE:-Dockerfile}
-CONTEXT=${PLUGIN_CONTEXT:-$PWD}
+CONTEXT="${PWD}/${PLUGIN_CONTEXT}"
 LOG=${PLUGIN_LOG:-info}
 
 if [[ -n "${PLUGIN_TARGET:-}" ]]; then
