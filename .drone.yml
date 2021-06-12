@@ -16,12 +16,14 @@ steps:
   - name: prepare
     image: drone/git
     commands:
+      - git submodule init
+      - git submodule update --recursive
       - cp plugin.sh img
-      - cd img
-      - git apply --whitespace=fix --3way ../patches/*
+      - ( cd img && git apply --whitespace=fix --3way ../patches/* )
 
   - name: build
     image: docker-registry.pikube.dev:31443/drone-genuinetools-img:latest
+    pull: always
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
@@ -93,6 +95,6 @@ steps:
 
 ---
 kind: signature
-hmac: 56236f0f0fe72f694354585e20fc9f93bb81b87c04fa4c8927da027989325eec
+hmac: 764e6a1fda61976f28462cda3b6688aa7f24359869b83828a811a187a358ece1
 
 ...
