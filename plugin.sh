@@ -27,8 +27,8 @@ if [ "${PLUGIN_JSON_KEY:-}" ];then
     export GOOGLE_APPLICATION_CREDENTIALS=/home/user/gcr.json
 fi
 
-DOCKERFILE=${PLUGIN_DOCKERFILE:-Dockerfile}
-CONTEXT="${PWD}/${PLUGIN_CONTEXT}"
+CONTEXT=${PLUGIN_CONTEXT:-${PWD}}
+DOCKERFILE=${CONTEXT}/${PLUGIN_DOCKERFILE:-Dockerfile}
 LOG=${PLUGIN_LOG:-info}
 
 if [[ -n "${PLUGIN_TARGET:-}" ]]; then
