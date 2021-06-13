@@ -36,7 +36,7 @@ steps:
     resources:
       limits:
         cpu: 1000
-        memory: 300MiB
+        memory: 500MiB
 
   - name: test
     pull: always
@@ -47,12 +47,13 @@ steps:
       context: img
       build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
       tags: ${DRONE_BRANCH},unstable
-      cache: false
+      cache: true
+      cache_image: docker-registry-service.docker-registry:5000/drone-genuinetools-img:cache
       insecure_registry: true
     resources:
       limits:
         cpu: 1000
-        memory: 300MiB
+        memory: 500MiB
 
 ---
 kind: pipeline
@@ -92,10 +93,10 @@ steps:
     resources:
       limits:
         cpu: 1000
-        memory: 300MiB
+        memory: 500MiB
 
 ---
 kind: signature
-hmac: c73dd7296153eacc933c7bae814c56165a7c22da6b3c268e9d922cdd4202e18e
+hmac: 368e1bada42cc4e62c80d3b00bc74158d133bbe9b398967985f2fa4cfa868932
 
 ...
