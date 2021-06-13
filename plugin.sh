@@ -106,6 +106,7 @@ echo "Building '${DOCKERFILE}' in '${CONTEXT}' as ${TAGS//--tag=/}"
     ${CACHE:-} \
     ${CACHE_REPO:-} \
     ${BUILD_ARGS:-} \
+    ${TARGET:-} \
     ${TAGS} \
     ${CONTEXT}
 
