@@ -2,3 +2,11 @@
 	path = img
 	url = https://github.com/genuinetools/img.git
 	tag = v0.5.11
+[submodule "shadow"]
+	path = shadow
+	url = https://github.com/shadow-maint/shadow.git
+	branch = 59c2dabb264ef7b3137f5edb52c0b31d5af0cf76
+[submodule "runc"]
+	path = runc
+	url = https://github.com/opencontainers/runc.git
+	branch = 56aca5aa50d07548d5db8fd33e9dc562f70f3208

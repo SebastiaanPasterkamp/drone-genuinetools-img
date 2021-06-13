@@ -54,13 +54,15 @@ toggles default to the opposite value if omitted.
 *   `cache: false` Will not use cache when building the image.
 *   `cache_from: user/app:cache,type=local,src=path/to/dir` Buildkit
     import-cache or Buildx cache-from specification. Default is empty.
+*   `cache_to: type=registry,ref=registry/app:cache,mode=max` Buildkit
+    import-cache or Buildx cache-to specification. Default is empty.
 *   `context: subdir/` Path of the directory used for the Docker build context.
     The default is the current directory.
 *   `dockerfile: path/to/Dockerfile` Path to the dockerfile inside the `context`.
     The default is just `Dockerfile`.
-*   `insecure_mirror: true` Pull-through registry-mirror may use http protocol.
-*   `insecure_registry: true` Push to insecure registry - either with a
-    self-signed CA, or over `http` if `https` is not supported.
+    `insecure_registries: host:port,host:port` List of registries not using ssl
+    for communication (`http://...`). This is insecure, and should only be used
+    in private networks (such as inside a Kubernetes cluster).
 *   `json_key: {...}`: Configure the `docker-credential-gcr` json file. Default
     is empty. May be formatted as inline yaml.
 *   `log: debug` Set the log level. Default is `info`.
@@ -69,8 +71,17 @@ toggles default to the opposite value if omitted.
 *   `platform: linux/arm64,linux/arm/v7` Sets one or more target platforms.
     Default is empty, which means the current platform.
 *   `registry: host:port` Set the docker registry URL. Required.
+*   `registry_mirrors: host:port,host:port` List of registry mirrors for a
+     pull-through cache.
 *   `repo: project-name` Set the docker image name. Required.
 *   `tags: 1,1.0,latest` Set and push one or more tags for the same build.
 *   `target: build` Set the target layer name of a multi-stage build. Default is
     empty.
 *   `username: user`: The registry username. Default is empty.
+
+### To do
+*   `cache_from` / `cache_to` only works with secure, or self-signed repositories.
+*   `insecure_registries` does not work yet. The img tool does not honor this
+    part of the configuration file.
+*   `registry_mirrors` does not work yet. The img tool does not honor this
+    part of the configuration file.

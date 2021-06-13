@@ -28,10 +28,7 @@ steps:
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
-      context: img
-      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
       tags: ${DRONE_BRANCH},unstable
-      cache: true
       insecure_registry: true
     resources:
       limits:
@@ -44,11 +41,7 @@ steps:
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
-      context: img
-      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=unstable
       tags: ${DRONE_BRANCH},unstable
-      cache: true
-      cache_image: docker-registry-service.docker-registry:5000/drone-genuinetools-img:cache
       insecure_registry: true
     resources:
       limits:
@@ -72,9 +65,11 @@ depends_on:
   - Image Staging
 
 steps:
-  - name: prepare
+  - name: apply patches
     image: drone/git
     commands:
+      - git submodule init
+      - git submodule update --recursive
       - cp plugin.sh img
       - cd img
       - git apply --whitespace=fix --3way ../patches/*
@@ -85,10 +80,7 @@ steps:
     settings:
       registry: docker-registry-service.docker-registry:5000
       repo: drone-genuinetools-img
-      context: img
-      build_args: GIT_BRANCH=${DRONE_BRANCH},GIT_COMMIT=${DRONE_COMMIT},GIT_TAG=${DRONE_TAG}
       auto_tag: true
-      cache: true
       insecure_registry: true
     resources:
       limits:
@@ -97,6 +89,6 @@ steps:
 
 ---
 kind: signature
-hmac: 40a26f76559b0875fff69687e3afe486d3107ad8c6e118f0c8b4bf2a03895cd4
+hmac: 561d0fbef891a59a701e93d722754f84d97c97bc306ddfaeb29989f7d4d3e215
 
 ...

@@ -13,20 +13,35 @@ mkdir -p $(dirname "${DOCKER_CONFIG}")
 echo "{" > $DOCKER_CONFIG
 if [ "${PLUGIN_USERNAME:-}" ] || [ "${PLUGIN_PASSWORD:-}" ]; then
     DOCKER_AUTH=`echo -n "${PLUGIN_USERNAME}:${PLUGIN_PASSWORD}" | base64 | tr -d "\n"`
-    echo "${CFGSEP}\"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } }," \
+    echo "  \"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } }," \
         >> $DOCKER_CONFIG
 fi
-if [ "${PLUGIN_MIRROR:-}" ] ; then
-    echo "\"registry-mirrors\": [ \"${PLUGIN_MIRROR:-}\" ]," \
+if [ "${PLUGIN_REGISTRY_MIRRORS:-}" ] ; then
+    MIRRORS=$(
+        SEP=""
+        echo "${PLUGIN_REGISTRY_MIRRORS}" | tr ',' '\n' | while read mirror; do
+            echo "${SEP}\"${mirror}\"";
+            SEP=", "
+        done
+    )
+    echo "  \"registry-mirrors\": [ ${MIRRORS} ]," \
         >> $DOCKER_CONFIG
-    if [ "${PLUGIN_INSECURE_MIRROR:-}" == "true" ] ; then
-        echo "\"insecure-registries\" : [ \"${PLUGIN_MIRROR:-}\" ]," \
-            >> $DOCKER_CONFIG
-    fi
+fi
+if [ "${PLUGIN_INSECURE_REGISTRIES:-}" ] ; then
+    REGISTRIES=$(
+        SEP=""
+        echo "${PLUGIN_INSECURE_REGISTRIES}" | tr ',' '\n' | while read registry; do
+            echo "${SEP}\"${registry}\"";
+            SEP=", "
+        done
+    )
+    echo "  \"insecure-registries\": [ ${REGISTRIES} ]," \
+        >> $DOCKER_CONFIG
 fi
 # Add fake final entry, so the terminating ',' in the previous line is syntactically correct
-echo "    \"drone\": \"plugin\""
+echo "  \"drone\": \"plugin\"" >> $DOCKER_CONFIG
 echo "}" >> $DOCKER_CONFIG
+cat ${DOCKER_CONFIG}
 
 if [ "${PLUGIN_JSON_KEY:-}" ];then
     echo "${PLUGIN_JSON_KEY}" > /home/user/gcr.json
@@ -46,11 +61,15 @@ if [[ "${PLUGIN_INSECURE_REGISTRY:-}" == "true" ]]; then
 fi
 
 if [[ "${PLUGIN_CACHE:-}" == "false" ]]; then
-    CACHE="--no-cache"
+    CACHE="${CACHE:-} --no-cache"
 fi
 
 if [ -n "${PLUGIN_CACHE_FROM:-}" ]; then
-    CACHE_REPO="--cache-from=${PLUGIN_CACHE_FROM}"
+    CACHE="${CACHE:-} --cache-from=${PLUGIN_CACHE_FROM}"
+fi
+
+if [ -n "${PLUGIN_CACHE_TO:-}" ]; then
+    CACHE="${CACHE:-} --cache-to=${PLUGIN_CACHE_TO}"
 fi
 
 if [ -n "${PLUGIN_BUILD_ARGS:-}" ]; then
@@ -104,14 +123,13 @@ elif [ -n "${PLUGIN_TAGS:-}" ]; then
 fi
 
 echo "Building '${DOCKERFILE}' in '${CONTEXT}' as ${TAGS//--tag=/}"
-echo "Platforms: ${PLATFORM:-}, Cache: ${CACHE:-} ${CACHE_REPO:-}, Args: ${BUILD_ARGS:-}, Target: ${TARGET:-}"
+echo "Platforms: ${PLATFORM:-}, Cache: ${CACHE:-}, Args: ${BUILD_ARGS:-}, Target: ${TARGET:-}"
 
 /usr/bin/img \
     build \
     --file=${DOCKERFILE} \
     ${PLATFORM:-} \
     ${CACHE:-} \
-    ${CACHE_REPO:-} \
     ${BUILD_ARGS:-} \
     ${TARGET:-} \
     ${TAGS} \
