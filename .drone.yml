@@ -36,7 +36,7 @@ steps:
     resources:
       limits:
         cpu: 1000
-        memory: 500MiB
+        memory: 300MiB
 
   - name: test
     pull: always
@@ -52,7 +52,7 @@ steps:
     resources:
       limits:
         cpu: 1000
-        memory: 500MiB
+        memory: 300MiB
 
 ---
 kind: pipeline
@@ -92,10 +92,10 @@ steps:
     resources:
       limits:
         cpu: 1000
-        memory: 500MiB
+        memory: 300MiB
 
 ---
 kind: signature
-hmac: 5e7f8010f6bf8853d4ac633b26640406a65287d11e6dd633bb29bd1b88a680d6
+hmac: c73dd7296153eacc933c7bae814c56165a7c22da6b3c268e9d922cdd4202e18e
 
 ...
