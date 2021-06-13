@@ -1,0 +1,26 @@
+From 3fc4b19805c1ded871513808a25511b8cbbcfd60 Mon Sep 17 00:00:00 2001
+From: kflansburg <kevin.flansburg@gmail.com>
+Date: Sat, 30 Jan 2021 14:01:23 -0600
+Subject: [PATCH 2/2] Update README
+
+---
+ README.md | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/README.md b/README.md
+index d75b0422..9df64c13 100644
+--- a/README.md
++++ b/README.md
+@@ -395,7 +395,8 @@ pull -  Pull an image or a repository from a registry.
+ Usage: img pull [OPTIONS] NAME[:TAG|@DIGEST]
+ 
+ Flags:
+-  -h, --help   help for pull
++  -h, --help                help for pull
++      --insecure-registry   Pull from insecure registry
+ 
+ Global Flags:
+   -b, --backend string   backend for snapshots ([auto native overlayfs fuse-overlayfs]) (default "auto")
+-- 
+2.25.1
+

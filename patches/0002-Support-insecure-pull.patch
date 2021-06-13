@@ -1,0 +1,180 @@
+From bf3ce3f8c7cb5fe05c1dc4d4f7daea438c62082d Mon Sep 17 00:00:00 2001
+From: kflansburg <kevin.flansburg@gmail.com>
+Date: Sat, 30 Jan 2021 13:49:07 -0600
+Subject: [PATCH 1/2] Support insecure pull
+
+---
+ client/client.go | 25 +++++++++++++++++++++++++
+ client/pull.go   |  9 +++++++--
+ client/push.go   | 27 +--------------------------
+ pull.go          |  7 ++++++-
+ 4 files changed, 39 insertions(+), 29 deletions(-)
+
+diff --git a/client/client.go b/client/client.go
+index 1492a5b6..77e5bdea 100644
+--- a/client/client.go
++++ b/client/client.go
+@@ -3,6 +3,7 @@ package client
+ import (
+ 	"os"
+ 	"path/filepath"
++	"net/http"
+ 
+ 	fuseoverlayfs "github.com/AkihiroSuda/containerd-fuse-overlayfs"
+ 	"github.com/containerd/containerd/snapshots/overlay"
+@@ -10,6 +11,7 @@ import (
+ 	"github.com/moby/buildkit/control"
+ 	"github.com/moby/buildkit/session"
+ 	"github.com/sirupsen/logrus"
++	"github.com/containerd/containerd/remotes/docker"
+ )
+ 
+ // Client holds the information for the client we will use for communicating
+@@ -54,6 +56,29 @@ func New(root, backend string, localDirs map[string]string) (*Client, error) {
+ 	}, nil
+ }
+ 
++func configureRegistries(scheme string) docker.RegistryHosts {
++	return func(host string) ([]docker.RegistryHost, error) {
++		config := docker.RegistryHost{
++			Client:       http.DefaultClient,
++			Authorizer:   nil,
++			Host:         host,
++			Scheme:       scheme,
++			Path:         "/v2",
++			Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
++		}
++
++		if config.Client == nil {
++			config.Client = http.DefaultClient
++		}
++
++		if host == "docker.io" {
++			config.Host = "registry-1.docker.io"
++		}
++
++		return []docker.RegistryHost{config}, nil
++	}
++}
++
+ // Close safely closes the client.
+ // This used to shut down the FUSE server but since that was removed
+ // it is basically a no-op now.
+diff --git a/client/pull.go b/client/pull.go
+index 49d1ffe1..976234fd 100644
+--- a/client/pull.go
++++ b/client/pull.go
+@@ -14,7 +14,7 @@ import (
+ )
+ 
+ // Pull retrieves an image from a remote registry.
+-func (c *Client) Pull(ctx context.Context, image string) (*ListedImage, error) {
++func (c *Client) Pull(ctx context.Context, image string, insecure bool) (*ListedImage, error) {
+ 	sm, err := c.getSessionManager()
+ 	if err != nil {
+ 		return nil, err
+@@ -52,6 +52,11 @@ func (c *Client) Pull(ctx context.Context, image string) (*ListedImage, error) {
+ 		return nil, err
+ 	}
+ 
++	registriesHosts := opt.RegistryHosts
++	if insecure {
++		registriesHosts = configureRegistries("http")
++	}
++
+ 	// Create the source for the pull.
+ 	srcOpt := containerimage.SourceOpt{
+ 		Snapshotter:   opt.Snapshotter,
+@@ -59,7 +64,7 @@ func (c *Client) Pull(ctx context.Context, image string) (*ListedImage, error) {
+ 		Applier:       opt.Applier,
+ 		CacheAccessor: cm,
+ 		ImageStore:    opt.ImageStore,
+-		RegistryHosts: opt.RegistryHosts,
++		RegistryHosts: registriesHosts,
+ 		LeaseManager:  opt.LeaseManager,
+ 	}
+ 	src, err := containerimage.NewSource(srcOpt)
+diff --git a/client/push.go b/client/push.go
+index 7c364f62..78048cd7 100644
+--- a/client/push.go
++++ b/client/push.go
+@@ -3,11 +3,9 @@ package client
+ import (
+ 	"context"
+ 	"fmt"
+-	"net/http"
+ 
+ 	"github.com/docker/distribution/reference"
+ 	"github.com/moby/buildkit/util/push"
+-	"github.com/containerd/containerd/remotes/docker"
+ )
+ 
+ // Push sends an image to a remote registry.
+@@ -39,31 +37,8 @@ func (c *Client) Push(ctx context.Context, image string, insecure bool) error {
+ 
+ 	registriesHosts := opt.RegistryHosts
+ 	if insecure {
+-		registriesHosts = configurePushRegistries("http")
++		registriesHosts = configureRegistries("http")
+ 	}
+ 
+ 	return push.Push(ctx, sm, opt.ContentStore, imgObj.Target.Digest, image, insecure, registriesHosts, false)
+ }
+-
+-func configurePushRegistries(scheme string) docker.RegistryHosts {
+-	return func(host string) ([]docker.RegistryHost, error) {
+-		config := docker.RegistryHost{
+-			Client:       http.DefaultClient,
+-			Authorizer:   nil,
+-			Host:         host,
+-			Scheme:       scheme,
+-			Path:         "/v2",
+-			Capabilities: docker.HostCapabilityPull | docker.HostCapabilityResolve | docker.HostCapabilityPush,
+-		}
+-
+-		if config.Client == nil {
+-			config.Client = http.DefaultClient
+-		}
+-
+-		if host == "docker.io" {
+-			config.Host = "registry-1.docker.io"
+-		}
+-
+-		return []docker.RegistryHost{config}, nil
+-	}
+-}
+diff --git a/pull.go b/pull.go
+index 3b9332a3..060f598c 100644
+--- a/pull.go
++++ b/pull.go
+@@ -31,6 +31,10 @@ func newPullCommand() *cobra.Command {
+ 		},
+ 	}
+ 
++	fs := cmd.Flags()
++
++	fs.BoolVar(&pull.insecure, "insecure-registry", false, "Pull from insecure registry")
++
+ 	return cmd
+ }
+ 
+@@ -44,6 +48,7 @@ func validatePullImageArgs(cmd *cobra.Command, args []string) error {
+ 
+ type pullCommand struct {
+ 	image string
++	insecure bool
+ }
+ 
+ func (cmd *pullCommand) Run(args []string) (err error) {
+@@ -78,7 +83,7 @@ func (cmd *pullCommand) Run(args []string) (err error) {
+ 	eg.Go(func() error {
+ 		defer sess.Close()
+ 		var err error
+-		listedImage, err = c.Pull(ctx, cmd.image)
++		listedImage, err = c.Pull(ctx, cmd.image, cmd.insecure)
+ 		return err
+ 	})
+ 	if err := eg.Wait(); err != nil {
+-- 
+2.25.1
+
