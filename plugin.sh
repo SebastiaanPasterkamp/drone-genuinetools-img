@@ -45,7 +45,7 @@ if [[ "${PLUGIN_INSECURE_REGISTRY:-}" == "true" ]]; then
     INSECURE_REGISTRY="--insecure-registry"
 fi
 
-if [[ "${PLUGIN_CACHE:-}" != "true" ]]; then
+if [[ "${PLUGIN_CACHE:-}" == "false" ]]; then
     CACHE="--no-cache"
 fi
 
@@ -104,6 +104,7 @@ elif [ -n "${PLUGIN_TAGS:-}" ]; then
 fi
 
 echo "Building '${DOCKERFILE}' in '${CONTEXT}' as ${TAGS//--tag=/}"
+echo "Platforms: ${PLATFORM:-}, Cache: ${CACHE:-} ${CACHE_REPO:-}, Args: ${BUILD_ARGS:-}, Target: ${TARGET:-}"
 
 /usr/bin/img \
     build \
