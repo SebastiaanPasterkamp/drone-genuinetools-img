@@ -13,7 +13,7 @@ trigger:
   - tag
 
 steps:
-  - name: prepare
+  - name: apply patches
     image: drone/git
     commands:
       - git submodule init
@@ -97,6 +97,6 @@ steps:
 
 ---
 kind: signature
-hmac: 368e1bada42cc4e62c80d3b00bc74158d133bbe9b398967985f2fa4cfa868932
+hmac: 40a26f76559b0875fff69687e3afe486d3107ad8c6e118f0c8b4bf2a03895cd4
 
 ...

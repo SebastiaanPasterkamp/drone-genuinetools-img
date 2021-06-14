@@ -6,21 +6,27 @@ export PATH=/usr/bin:$PATH
 
 img --version
 
+DOCKER_CONFIG=${DOCKER_CONFIG:-/home/user/.docker/config.json}
 REGISTRY=${PLUGIN_REGISTRY:-index.docker.io}
 
+mkdir -p $(dirname "${DOCKER_CONFIG}")
+echo "{" > $DOCKER_CONFIG
 if [ "${PLUGIN_USERNAME:-}" ] || [ "${PLUGIN_PASSWORD:-}" ]; then
     DOCKER_AUTH=`echo -n "${PLUGIN_USERNAME}:${PLUGIN_PASSWORD}" | base64 | tr -d "\n"`
-
-    cat > /home/user/.docker/config.json <<DOCKERJSON
-{
-    "auths": {
-        "${REGISTRY}": {
-            "auth": "${DOCKER_AUTH}"
-        }
-    }
-}
-DOCKERJSON
+    echo "${CFGSEP}\"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } }," \
+        >> $DOCKER_CONFIG
 fi
+if [ "${PLUGIN_MIRROR:-}" ] ; then
+    echo "\"registry-mirrors\": [ \"${PLUGIN_MIRROR:-}\" ]," \
+        >> $DOCKER_CONFIG
+    if [ "${PLUGIN_INSECURE_MIRROR:-}" == "true" ] ; then
+        echo "\"insecure-registries\" : [ \"${PLUGIN_MIRROR:-}\" ]," \
+            >> $DOCKER_CONFIG
+    fi
+fi
+# Add fake final entry, so the terminating ',' in the previous line is syntactically correct
+echo "    \"drone\": \"plugin\""
+echo "}" >> $DOCKER_CONFIG
 
 if [ "${PLUGIN_JSON_KEY:-}" ];then
     echo "${PLUGIN_JSON_KEY}" > /home/user/gcr.json

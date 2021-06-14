@@ -58,11 +58,13 @@ toggles default to the opposite value if omitted.
     The default is the current directory.
 *   `dockerfile: path/to/Dockerfile` Path to the dockerfile inside the `context`.
     The default is just `Dockerfile`.
+*   `insecure_mirror: true` Pull-through registry-mirror may use http protocol.
 *   `insecure_registry: true` Push to insecure registry - either with a
     self-signed CA, or over `http` if `https` is not supported.
 *   `json_key: {...}`: Configure the `docker-credential-gcr` json file. Default
     is empty. May be formatted as inline yaml.
 *   `log: debug` Set the log level. Default is `info`.
+*   `mirror: host:port` Configure a registry as pull-through mirror.
 *   `password: pwd`: The registry password. Default is empty.
 *   `platform: linux/arm64,linux/arm/v7` Sets one or more target platforms.
     Default is empty, which means the current platform.
