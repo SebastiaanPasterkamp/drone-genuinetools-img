@@ -117,7 +117,7 @@ if [[ "${PLUGIN_AUTO_TAG:-}" == "true" ]]; then
 elif [ -n "${PLUGIN_TAGS:-}" ]; then
     TAGS=$(
         echo "${PLUGIN_TAGS}" | tr ',' '\n' | while read tag; do
-            echo -n "--tag=${IMAGE}:${tag} "
+            echo -n "--tag=${IMAGE}:${tag##*/} "
         done
     )
 fi
