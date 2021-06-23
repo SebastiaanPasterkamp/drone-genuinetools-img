@@ -88,7 +88,53 @@ steps:
         memory: 500MiB
 
 ---
+kind: pipeline
+type: kubernetes
+name: Notify Status
+
+clone:
+  disable: true
+
+trigger:
+  status:
+  - success
+  - failure
+
+depends_on:
+- Image Staging
+- Image Production
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+  - name: discord notification
+    image: appleboy/drone-discord
+    settings:
+      webhook_id:
+        from_secret: discord_id
+      webhook_token:
+        from_secret: discord_token
+      username: drone.io
+      color: auto
+      message: >
+        <:genuinetools:857329283278438464> **{{repo.name}}**
+
+        {{#success build.status}}
+        :white_check_mark: {{build.event}} build {{build.number}} succeeded. Good job.
+        {{else}}
+        :warning: {{build.event}} build {{build.number}} failed. Fix me please.
+        {{/success}}
+
+        {{build.link}}
+
+        **Branch:** {{commit.branch}} {{commit.tag}}
+
+        **Message:** {{commit.message}}
+
+---
 kind: signature
-hmac: 561d0fbef891a59a701e93d722754f84d97c97bc306ddfaeb29989f7d4d3e215
+hmac: b15da89b4c2d3bdbb297515039942028bfbebed07e5a13420f28a5b8a71c1fd6
 
 ...
