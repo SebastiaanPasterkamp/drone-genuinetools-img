@@ -95,7 +95,8 @@ COPY plugin.sh /drone/
 RUN chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap \
 	&& adduser -D -u 1000 user \
 	&& mkdir -p /run/user/1000 \
-	&& chown -R user /run/user/1000 /home/user \
+	&& mkdir -p /etc/docker \
+	&& chown -R user /run/user/1000 /home/user /etc/docker \
 	&& echo user:100000:65536 | tee /etc/subuid | tee /etc/subgid
 
 FROM base AS debug

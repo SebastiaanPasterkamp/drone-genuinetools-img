@@ -7,41 +7,45 @@ export PATH=/usr/bin:$PATH
 img --version
 
 DOCKER_CONFIG=${DOCKER_CONFIG:-/home/user/.docker/config.json}
+DAEMON_CONFIG=${DAEMON_CONFIG:-/etc/docker/daemon.json}
 REGISTRY=${PLUGIN_REGISTRY:-index.docker.io}
 
-mkdir -p $(dirname "${DOCKER_CONFIG}")
-echo "{" > $DOCKER_CONFIG
 if [ "${PLUGIN_USERNAME:-}" ] || [ "${PLUGIN_PASSWORD:-}" ]; then
+    mkdir -p $(dirname "${DOCKER_CONFIG}")
     DOCKER_AUTH=`echo -n "${PLUGIN_USERNAME}:${PLUGIN_PASSWORD}" | base64 | tr -d "\n"`
-    echo "  \"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } }," \
+    echo "{ \"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } } }" \
         >> $DOCKER_CONFIG
 fi
-if [ "${PLUGIN_REGISTRY_MIRRORS:-}" ] ; then
-    MIRRORS=$(
-        SEP=""
-        echo "${PLUGIN_REGISTRY_MIRRORS}" | tr ',' '\n' | while read mirror; do
-            echo "${SEP}\"${mirror}\"";
-            SEP=", "
-        done
-    )
-    echo "  \"registry-mirrors\": [ ${MIRRORS} ]," \
-        >> $DOCKER_CONFIG
+
+if [ -n "${PLUGIN_REGISTRY_MIRRORS:-}" ] || [ -n "${PLUGIN_INSECURE_REGISTRIES:-}" ] ; then
+    mkdir -p $(dirname "${DAEMON_CONFIG}")
+    echo "{" > $DAEMON_CONFIG
+    if [ "${PLUGIN_REGISTRY_MIRRORS:-}" ] ; then
+        MIRRORS=$(
+            SEP=""
+            echo "${PLUGIN_REGISTRY_MIRRORS}" | tr ',' '\n' | while read mirror; do
+                echo "${SEP}\"${mirror}\"";
+                SEP=", "
+            done
+        )
+        echo "  \"registry-mirrors\": [ ${MIRRORS} ]," \
+            >> $DAEMON_CONFIG
+    fi
+    if [ "${PLUGIN_INSECURE_REGISTRIES:-}" ] ; then
+        REGISTRIES=$(
+            SEP=""
+            echo "${PLUGIN_INSECURE_REGISTRIES}" | tr ',' '\n' | while read registry; do
+                echo "${SEP}\"${registry}\"";
+                SEP=", "
+            done
+        )
+        echo "  \"insecure-registries\": [ ${REGISTRIES} ]," \
+            >> $DAEMON_CONFIG
+    fi
+    # Add fake final entry, so the terminating ',' in the previous line is syntactically correct
+    echo "  \"drone\": \"plugin\"" >> $DAEMON_CONFIG
+    echo "}" >> $DAEMON_CONFIG
 fi
-if [ "${PLUGIN_INSECURE_REGISTRIES:-}" ] ; then
-    REGISTRIES=$(
-        SEP=""
-        echo "${PLUGIN_INSECURE_REGISTRIES}" | tr ',' '\n' | while read registry; do
-            echo "${SEP}\"${registry}\"";
-            SEP=", "
-        done
-    )
-    echo "  \"insecure-registries\": [ ${REGISTRIES} ]," \
-        >> $DOCKER_CONFIG
-fi
-# Add fake final entry, so the terminating ',' in the previous line is syntactically correct
-echo "  \"drone\": \"plugin\"" >> $DOCKER_CONFIG
-echo "}" >> $DOCKER_CONFIG
-cat ${DOCKER_CONFIG}
 
 if [ "${PLUGIN_JSON_KEY:-}" ];then
     echo "${PLUGIN_JSON_KEY}" > /home/user/gcr.json
