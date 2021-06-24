@@ -31,9 +31,9 @@ steps:
       tags: ${DRONE_BRANCH},unstable
       insecure_registry: true
     resources:
-      limits:
-        cpu: 1000
-        memory: 500MiB
+      requests:
+        cpu: 1500
+        memory: 750MiB
 
   - name: test
     pull: always
@@ -44,9 +44,9 @@ steps:
       tags: ${DRONE_BRANCH},unstable
       insecure_registry: true
     resources:
-      limits:
-        cpu: 1000
-        memory: 500MiB
+      requests:
+        cpu: 1500
+        memory: 750MiB
 
 ---
 kind: pipeline
@@ -83,9 +83,9 @@ steps:
       auto_tag: true
       insecure_registry: true
     resources:
-      limits:
-        cpu: 1000
-        memory: 500MiB
+      requests:
+        cpu: 2000
+        memory: 750MiB
 
 ---
 kind: pipeline
@@ -135,6 +135,6 @@ steps:
 
 ---
 kind: signature
-hmac: b15da89b4c2d3bdbb297515039942028bfbebed07e5a13420f28a5b8a71c1fd6
+hmac: 5ba667bf1949821c0ddbf270c4e9c553a60f94afe8c72b632fc2b51a40ba5c33
 
 ...
