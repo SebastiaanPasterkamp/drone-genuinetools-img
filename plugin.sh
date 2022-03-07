@@ -89,8 +89,8 @@ if [ -n "${PLUGIN_PLATFORM:-}" ]; then
 fi
 
 IMAGE=""
-if [ -n "${PLUGIN_REGISTRY:-}" ] && [ -n "${PLUGIN_REPO:-}" ]; then
-    IMAGE="${PLUGIN_REGISTRY}/${PLUGIN_REPO}"
+if [ -n "${REGISTRY:-}" ] && [ -n "${PLUGIN_REPO:-}" ]; then
+    IMAGE="${REGISTRY}/${PLUGIN_REPO}"
 fi
 
 TAGS="--tag=${IMAGE}:latest"
