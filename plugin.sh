@@ -8,7 +8,7 @@ img --version
 
 DOCKER_CONFIG=${DOCKER_CONFIG:-/home/user/.docker/config.json}
 DAEMON_CONFIG=${DAEMON_CONFIG:-/etc/docker/daemon.json}
-REGISTRY=${PLUGIN_REGISTRY:-index.docker.io}
+REGISTRY=${PLUGIN_REGISTRY:-https://index.docker.io/v1/}
 
 if [ "${PLUGIN_USERNAME:-}" ] || [ "${PLUGIN_PASSWORD:-}" ]; then
     mkdir -p $(dirname "${DOCKER_CONFIG}")
