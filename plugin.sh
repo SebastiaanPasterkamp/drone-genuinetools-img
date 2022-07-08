@@ -77,7 +77,7 @@ if [ -n "${PLUGIN_CACHE_TO:-}" ]; then
 fi
 
 if [ -n "${PLUGIN_BUILD_ARGS:-}" ]; then
-    BUILD_ARGS="--build-arg=${PLUGIN_BUILD_ARGS}"
+    BUILD_ARGS="--build-arg \"${PLUGIN_BUILD_ARGS//,/\" --build-arg \"}\""
 fi
 
 if [ -n "${PLUGIN_PLATFORM:-}" ]; then
