@@ -77,15 +77,17 @@ if [ -n "${PLUGIN_CACHE_TO:-}" ]; then
 fi
 
 if [ -n "${PLUGIN_BUILD_ARGS:-}" ]; then
-    BUILD_ARGS="--build-arg \"${PLUGIN_BUILD_ARGS//,/\" --build-arg \"}\""
+    BUILD_ARGS="--build-arg=\"$(
+        echo "${PLUGIN_BUILD_ARGS}" \
+        | sed -r 's/,/" --build-arg="/g'
+    )\""
 fi
 
 if [ -n "${PLUGIN_PLATFORM:-}" ]; then
-    PLATFORM=$(
-        echo "${PLUGIN_PLATFORM}" | tr ',' '\n' | while read platform; do
-            echo "--platform=${platform} ";
-        done
-    )
+    PLATFORM="--platform=\"$(
+        echo "${PLUGIN_PLATFORM}" \
+        | sed -r 's/,/" --platform="/g'
+    )\""
 fi
 
 IMAGE=""
@@ -98,8 +100,8 @@ TAGS="--tag=${IMAGE}:latest"
 # support format Major.Minor.Release or start with `v`
 # docker tags: Major, Major.Minor, Major.Minor.Release and latest
 if [[ "${PLUGIN_AUTO_TAG:-}" == "true" ]]; then
-    TAG=$(echo "${DRONE_TAG:-}" |sed 's/^v//g')
-    part=$(echo "${TAG}" |tr '.' '\n' |wc -l)
+    TAG=$(echo "${DRONE_TAG:-}" | sed 's/^v//g')
+    part=$(echo "${TAG}" | tr '.' '\n' | wc -l)
     # expect number
     echo ${TAG} | grep -E "[a-z-]" &> /dev/null && isNum=1 || isNum=0
 
