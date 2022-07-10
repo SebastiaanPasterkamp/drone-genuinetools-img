@@ -143,6 +143,6 @@ echo "Platforms: ${PLATFORM:-}, Cache: ${CACHE:-}, Args: ${BUILD_ARGS:-}, Target
 
 echo "Pushing ${INSECURE_REGISTRY} ${TAGS//--tag=}"
 
-echo -n "${TAGS//--tag=/}" | tr ' ' '\n' | while read tag; do
+for tag in ${TAGS//--tag=/} ; do
     /usr/bin/img push "${INSECURE_REGISTRY:-}" "${tag}"
 done
