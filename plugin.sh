@@ -69,25 +69,25 @@ if [[ "${PLUGIN_CACHE:-}" == "false" ]]; then
 fi
 
 if [ -n "${PLUGIN_CACHE_FROM:-}" ]; then
-    CACHE="${CACHE:-} --cache-from=${PLUGIN_CACHE_FROM}"
+    CACHE="${CACHE:-} --cache-from=type=registry,ref=${REGISTRY}/${PLUGIN_CACHE_FROM}"
 fi
 
 if [ -n "${PLUGIN_CACHE_TO:-}" ]; then
-    CACHE="${CACHE:-} --cache-to=${PLUGIN_CACHE_TO}"
+    CACHE="${CACHE:-} --cache-to=type=registry,ref=${REGISTRY}/${PLUGIN_CACHE_TO},mode=max"
 fi
 
 if [ -n "${PLUGIN_BUILD_ARGS:-}" ]; then
-    BUILD_ARGS="--build-arg=\"$(
+    BUILD_ARGS="--build-arg=$(
         echo "${PLUGIN_BUILD_ARGS}" \
-        | sed -r 's/,/" --build-arg="/g'
-    )\""
+        | sed -r 's/,/ --build-arg=/g'
+    )"
 fi
 
 if [ -n "${PLUGIN_PLATFORM:-}" ]; then
-    PLATFORM="--platform=\"$(
+    PLATFORM="--platform=$(
         echo "${PLUGIN_PLATFORM}" \
-        | sed -r 's/,/" --platform="/g'
-    )\""
+        | sed -r 's/,/ --platform=/g'
+    )"
 fi
 
 IMAGE=""
