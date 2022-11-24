@@ -8,13 +8,19 @@ img --version
 
 DOCKER_CONFIG=${DOCKER_CONFIG:-/home/user/.docker/config.json}
 DAEMON_CONFIG=${DAEMON_CONFIG:-/etc/docker/daemon.json}
-REGISTRY=${PLUGIN_REGISTRY:-docker.io}
+REGISTRY=""
+IMAGE="${PLUGIN_REPO}"
+
+if [ "${PLUGIN_REGISTRY:-}" ]; then
+    REGISTRY="${PLUGIN_REGISTRY:-}/"
+    IMAGE="${PLUGIN_REGISTRY:-}/${PLUGIN_REPO}"
+fi
 
 if [ "${PLUGIN_USERNAME:-}" ] || [ "${PLUGIN_PASSWORD:-}" ]; then
-    mkdir -p $(dirname "${DOCKER_CONFIG}")
-    DOCKER_AUTH=`echo -n "${PLUGIN_USERNAME}:${PLUGIN_PASSWORD}" | base64 | tr -d "\n"`
-    echo "{ \"auths\": { \"${REGISTRY}\": { \"auth\": \"${DOCKER_AUTH}\" } } }" \
-        >> $DOCKER_CONFIG
+    echo "${PLUGIN_PASSWORD}" | /usr/bin/img login \
+        --username "${PLUGIN_USERNAME}" \
+        --password-stdin \
+        ${PLUGIN_REGISTRY:-}
 fi
 
 if [ -n "${PLUGIN_REGISTRY_MIRRORS:-}" ] || [ -n "${PLUGIN_INSECURE_REGISTRIES:-}" ] ; then
@@ -69,11 +75,11 @@ if [[ "${PLUGIN_CACHE:-}" == "false" ]]; then
 fi
 
 if [ -n "${PLUGIN_CACHE_FROM:-}" ]; then
-    CACHE="${CACHE:-} --cache-from=type=registry,ref=${REGISTRY}/${PLUGIN_CACHE_FROM}"
+    CACHE="${CACHE:-} --cache-from=type=registry,ref=${REGISTRY}${PLUGIN_CACHE_FROM}"
 fi
 
 if [ -n "${PLUGIN_CACHE_TO:-}" ]; then
-    CACHE="${CACHE:-} --cache-to=type=registry,ref=${REGISTRY}/${PLUGIN_CACHE_TO},mode=max"
+    CACHE="${CACHE:-} --cache-to=type=registry,mode=max,ref=${REGISTRY}${PLUGIN_CACHE_TO}"
 fi
 
 if [ -n "${PLUGIN_BUILD_ARGS:-}" ]; then
@@ -88,11 +94,6 @@ if [ -n "${PLUGIN_PLATFORM:-}" ]; then
         echo "${PLUGIN_PLATFORM}" \
         | sed -r 's/,/ --platform=/g'
     )"
-fi
-
-IMAGE=""
-if [ -n "${REGISTRY:-}" ] && [ -n "${PLUGIN_REPO:-}" ]; then
-    IMAGE="${REGISTRY}/${PLUGIN_REPO}"
 fi
 
 TAGS="--tag=${IMAGE}:latest"
@@ -141,8 +142,8 @@ echo "Platforms: ${PLATFORM:-}, Cache: ${CACHE:-}, Args: ${BUILD_ARGS:-}, Target
     ${TAGS} \
     ${CONTEXT}
 
-echo "Pushing ${INSECURE_REGISTRY} ${TAGS//--tag=}"
+echo "Pushing ${INSECURE_REGISTRY:-} ${TAGS//--tag=}"
 
 for tag in ${TAGS//--tag=/} ; do
-    /usr/bin/img push "${INSECURE_REGISTRY:-}" "${tag}"
+    /usr/bin/img push ${INSECURE_REGISTRY:-} "${tag}"
 done
